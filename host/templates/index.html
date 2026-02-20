@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpeechMate 管理面板</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+        .kbd { display: inline-block; padding: 0.15rem 0.4rem; font-size: 0.75rem; font-family: monospace; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 0.25rem; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">SpeechMate</h1>
+                <p class="text-gray-500 mt-1">语音识别 & 翻译助手管理面板</p>
+            </div>
+            <div class="text-sm text-gray-500">
+                <span id="currentTime"></span>
+            </div>
+        </div>
+        
+        <!-- Base URL -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+            <h2 class="text-lg font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                </svg>
+                服务信息
+            </h2>
+            <div class="flex items-center gap-3">
+                <span class="text-gray-600">Base URL:</span>
+                <code class="bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg font-mono text-sm">{{ base_url }}</code>
+                <button onclick="copyToClipboard('{{ base_url }}')" class="text-gray-400 hover:text-gray-600" title="复制">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Stats -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+            <h2 class="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                使用统计
+            </h2>
+            <div class="grid grid-cols-3 gap-4">
+                <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl">
+                    <p class="text-blue-600 text-sm font-medium">今日调用</p>
+                    <p id="dailyCalls" class="text-3xl font-bold text-blue-700 mt-1">{{ total_calls }}</p>
+                </div>
+                <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-xl">
+                    <p class="text-purple-600 text-sm font-medium">本周调用</p>
+                    <p id="weeklyCalls" class="text-3xl font-bold text-purple-700 mt-1">{{ stats.weekly|length }}</p>
+                </div>
+                <div class="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-xl">
+                    <p class="text-orange-600 text-sm font-medium">本月调用</p>
+                    <p id="monthlyCalls" class="text-3xl font-bold text-orange-700 mt-1">{{ stats.monthly|length }}</p>
+                </div>
+            </div>
+            <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+                <h3 class="text-sm font-medium text-gray-600 mb-2">详细统计</h3>
+                <pre class="text-xs text-gray-500 overflow-x-auto">{{ stats|dump(2)|safe }}</pre>
+            </div>
+        </div>
+        
+        <!-- API Keys -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold text-gray-700 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                    </svg>
+                    API Keys
+                </h2>
+                <button onclick="createKey()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    创建新Key
+                </button>
+            </div>
+            <div id="keysList" class="space-y-2">
+                {% if keys %}
+                {% for key in keys %}
+                <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div class="flex-1 min-w-0">
+                        <code class="text-sm font-mono text-gray-700 break-all">{{ key.key }}</code>
+                        <p class="text-xs text-gray-400 mt-1">{{ key.name }} · {{ key.created_at }}</p>
+                    </div>
+                    <button onclick="deleteKey('{{ key.key }}')" class="text-red-400 hover:text-red-600 p-2 hover:bg-red-50 rounded-lg transition-colors" title="删除">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                    </button>
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="text-gray-400 text-center py-4">暂无API Key，请创建一个</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Model Management -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+            <h2 class="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
+                </svg>
+                模型管理
+            </h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">语音识别模型 (ASR)</label>
+                    <select id="asrModel" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        {% for model in models.asr.available %}
+                        <option value="{{ model.name }}" {% if model.name == models.asr.current %}selected{% endif %}>
+                            {{ model.name }} - {{ model.size }} - 精度{{ model.accuracy }} - 速度{{ model.speed }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">翻译模型</label>
+                    <select id="translateModel" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        {% for model in models.translate.available %}
+                        <option value="{{ model.name }}" {% if model.name == models.translate.current %}selected{% endif %}>
+                            {{ model.name }} - {{ model.size }} - 速度{{ model.speed }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-600 mb-2">运行设备</label>
+                    <select id="device" class="w-full border border-gray-200 rounded-lg px-4 py-2.5 bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="cpu" {% if models.device == 'cpu' %}selected{% endif %}>CPU (通用)</option>
+                        <option value="cuda" {% if models.device == 'cuda' %}selected{% endif %}>GPU (CUDA) - 需要NVIDIA显卡</option>
+                    </select>
+                </div>
+                
+                <button onclick="switchModel()" class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    切换模型
+                </button>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="text-center text-gray-400 text-sm py-4">
+            <p>SpeechMate v1.0.0 · 语音识别 & 翻译助手</p>
+        </div>
+    </div>
+    
+    <script>
+        const baseUrl = '{{ base_url }}';
+        
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('currentTime').textContent = now.toLocaleString('zh-CN');
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+        
+        async function copyToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                alert('已复制到剪贴板');
+            } catch (err) {
+                console.error('复制失败:', err);
+            }
+        }
+        
+        async function createKey() {
+            try {
+                const response = await fetch('/api/v1/keys', { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'name=default'
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert('API Key: ' + data.key + '\n\n请妥善保存，关闭后将无法查看！');
+                    location.reload();
+                }
+            } catch (err) {
+                alert('创建失败: ' + err);
+            }
+        }
+        
+        async function deleteKey(key) {
+            if (!confirm('确定要删除这个API Key吗？')) return;
+            try {
+                await fetch('/api/v1/keys/' + key, { method: 'DELETE' });
+                location.reload();
+            } catch (err) {
+                alert('删除失败: ' + err);
+            }
+        }
+        
+        async function switchModel() {
+            const asrModel = document.getElementById('asrModel').value;
+            const translateModel = document.getElementById('translateModel').value;
+            const device = document.getElementById('device').value;
+            
+            try {
+                const response = await fetch('/api/v1/models/switch', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'model_type=asr&model_name=' + asrModel + '&device=' + device
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('ASR模型切换成功: ' + asrModel);
+                }
+            } catch (err) {
+                alert('切换失败: ' + err);
+            }
+            
+            try {
+                const response2 = await fetch('/api/v1/models/switch', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'model_type=translate&model_name=' + translateModel + '&device=' + device
+                });
+                const data2 = await response2.json();
+                
+                if (data2.success) {
+                    alert('翻译模型切换成功: ' + translateModel + '\n\n注意: 请重启服务以使更改生效');
+                }
+            } catch (err) {
+                alert('切换失败: ' + err);
+            }
+        }
+    </script>
+</body>
+</html>
