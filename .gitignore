@@ -1,0 +1,10 @@
+.worktrees/
+worktrees/
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+dist/
+release/
+*.log
