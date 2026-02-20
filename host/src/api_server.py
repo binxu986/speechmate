@@ -7,15 +7,17 @@ from typing import Optional
 import signal
 import sys
 
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 from fastapi import FastAPI, HTTPException, Header, UploadFile, File, Form
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from jinja2 import Template
 
-from .config import load_config, save_config
-from .asr_engine import ASREngine
-from .translate_engine import TranslationEngine
-from .key_manager import KeyManager
+from src.config import load_config, save_config
+from src.asr_engine import ASREngine
+from src.translate_engine import TranslationEngine
+from src.key_manager import KeyManager
 
 app = FastAPI(title="SpeechMate API", version="1.0.0")
 app.add_middleware(
