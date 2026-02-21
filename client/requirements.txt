@@ -1,0 +1,32 @@
+# SpeechMate Client Dependencies
+
+# GUI Framework
+PyQt5==5.15.10
+PyQt5-Qt5==5.15.2
+PyQt5-sip==12.13.0
+
+# Audio Recording
+sounddevice==0.4.6
+soundfile==0.12.1
+numpy==1.26.3
+
+# Keyboard and Mouse
+pynput==1.7.6
+pyperclip==1.8.2
+keyboard==0.13.5
+
+# HTTP Client
+requests==2.31.0
+
+# System
+psutil==5.9.7
+
+# Logging
+loguru==0.7.2
+
+# Configuration
+python-dotenv==1.0.0
+pyyaml==6.0.1
+
+# Build Tool
+pyinstaller==6.3.0

@@ -1,0 +1,8 @@
+# SpeechMate Host Server - Optional Translation Dependencies
+# Install these if you want to use local translation models instead of API
+
+# Translation Models
+transformers>=4.30.0
+torch>=2.0.0
+sentencepiece>=0.1.99
+sacremoses>=0.1.1
