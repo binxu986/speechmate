@@ -1,10 +1,17 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 SpeechMate Host Server Test Script
 Tests basic functionality without starting the server
 """
 import sys
+import os
 from pathlib import Path
+
+# Fix encoding for Windows console
+if sys.platform == 'win32':
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
 
 # Add host directory to path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -16,30 +23,30 @@ def test_imports():
 
     try:
         from app.config import config, ASR_MODELS
-        print("  ✓ app.config")
+        print("  [OK] app.config")
     except Exception as e:
-        print(f"  ✗ app.config: {e}")
+        print(f"  [FAIL] app.config: {e}")
         return False
 
     try:
         from app.database import init_db, get_all_api_keys
-        print("  ✓ app.database")
+        print("  [OK] app.database")
     except Exception as e:
-        print(f"  ✗ app.database: {e}")
+        print(f"  [FAIL] app.database: {e}")
         return False
 
     try:
         from models.asr_model import get_asr_model
-        print("  ✓ models.asr_model")
+        print("  [OK] models.asr_model")
     except Exception as e:
-        print(f"  ✗ models.asr_model: {e}")
+        print(f"  [FAIL] models.asr_model: {e}")
         return False
 
     try:
         from models.translation_model import translate_text
-        print("  ✓ models.translation_model")
+        print("  [OK] models.translation_model")
     except Exception as e:
-        print(f"  ✗ models.translation_model: {e}")
+        print(f"  [FAIL] models.translation_model: {e}")
         return False
 
     return True
@@ -53,14 +60,14 @@ def test_database():
         from app.database import init_db, get_all_api_keys, create_api_key
 
         init_db()
-        print("  ✓ Database initialized")
+        print("  [OK] Database initialized")
 
         keys = get_all_api_keys()
-        print(f"  ✓ Found {len(keys)} API keys")
+        print(f"  [OK] Found {len(keys)} API keys")
 
         return True
     except Exception as e:
-        print(f"  ✗ Database error: {e}")
+        print(f"  [FAIL] Database error: {e}")
         return False
 
 
@@ -72,12 +79,12 @@ def test_translation():
         from models.translation_model import translate_text
 
         # Test with simple text
-        text, time_taken = translate_text("你好", "zh", "en")
-        print(f"  ✓ Translation: '你好' -> '{text}' ({time_taken:.2f}s)")
+        text, time_taken = translate_text("Hello", "en", "zh")
+        print(f"  [OK] Translation: 'Hello' -> '{text}' ({time_taken:.2f}s)")
 
         return True
     except Exception as e:
-        print(f"  ✗ Translation error: {e}")
+        print(f"  [FAIL] Translation error: {e}")
         return False
 
 
@@ -90,11 +97,28 @@ def test_asr_model():
 
         # Load the smallest model for testing
         model = get_asr_model("tiny", "cpu", "int8")
-        print("  ✓ ASR model loaded (tiny)")
+        print("  [OK] ASR model loaded (tiny)")
 
         return True
     except Exception as e:
-        print(f"  ✗ ASR model error: {e}")
+        print(f"  [FAIL] ASR model error: {e}")
+        return False
+
+
+def test_config():
+    """Test configuration"""
+    print("\nTesting configuration...")
+
+    try:
+        from app.config import config, detect_gpu
+
+        device, compute_type = detect_gpu()
+        print(f"  [OK] Detected device: {device}, compute_type: {compute_type}")
+        print(f"  [OK] Current config - model: {config.model.asr_model}, device: {config.model.asr_device}")
+
+        return True
+    except Exception as e:
+        print(f"  [FAIL] Config error: {e}")
         return False
 
 
@@ -107,6 +131,7 @@ def main():
     results = []
 
     results.append(("Imports", test_imports()))
+    results.append(("Config", test_config()))
     results.append(("Database", test_database()))
     results.append(("Translation", test_translation()))
     results.append(("ASR Model", test_asr_model()))
@@ -125,10 +150,10 @@ def main():
     print(f"\nTotal: {passed}/{len(results)} tests passed")
 
     if passed == len(results):
-        print("\n✓ All tests passed!")
+        print("\n[SUCCESS] All tests passed!")
         return 0
     else:
-        print("\n✗ Some tests failed")
+        print("\n[FAILED] Some tests failed")
         return 1
 
 

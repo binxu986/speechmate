@@ -73,7 +73,7 @@ async def transcribe(
 
         # Log usage
         log_usage(
-            api_key_id=api_key_obj.id,
+            api_key_id=api_key_obj["id"],
             endpoint="transcribe",
             audio_duration=audio_duration,
             processing_time=total_time,
@@ -95,7 +95,7 @@ async def transcribe(
 
         # Log failed usage
         log_usage(
-            api_key_id=api_key_obj.id,
+            api_key_id=api_key_obj["id"],
             endpoint="transcribe",
             processing_time=total_time,
             success=False,

@@ -12,6 +12,13 @@ import time
 import platform
 from pathlib import Path
 
+# Configure HuggingFace mirror for better connectivity (China users)
+# Set HF_ENDPOINT environment variable to use a different mirror
+if "HF_ENDPOINT" not in os.environ:
+    # Try to detect if we're in China (simple heuristic)
+    # Users can set HF_ENDPOINT=https://huggingface.co to use official source
+    os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
+
 # Configuration
 BASE_DIR = Path(__file__).parent.absolute()
 VENV_DIR = BASE_DIR / "venv"

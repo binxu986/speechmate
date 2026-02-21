@@ -31,11 +31,26 @@ class ServerConfig(BaseModel):
     debug: bool = False
 
 
+def detect_gpu() -> tuple:
+    """Detect if CUDA GPU is available and return optimal settings"""
+    try:
+        import torch
+        if torch.cuda.is_available():
+            return "cuda", "float16"  # GPU optimal settings
+    except ImportError:
+        pass
+    return "cpu", "int8"  # CPU default settings
+
+
+# Auto-detect GPU on startup
+_default_device, _default_compute_type = detect_gpu()
+
+
 class ModelConfig(BaseModel):
     """Model configuration"""
     asr_model: str = "small"
-    asr_device: str = "cpu"  # cpu or cuda
-    asr_compute_type: str = "int8"  # float16, int8, int8_float16
+    asr_device: str = _default_device  # cpu or cuda (auto-detected)
+    asr_compute_type: str = _default_compute_type  # float16 (GPU), int8 (CPU)
     translation_model_zh_en: str = "Helsinki-NLP/opus-mt-zh-en"
     translation_model_en_zh: str = "Helsinki-NLP/opus-mt-en-zh"
 

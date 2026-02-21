@@ -1,10 +1,17 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 SpeechMate Client Test Script
 Tests basic functionality without running the GUI
 """
 import sys
+import os
 from pathlib import Path
+
+# Fix encoding for Windows console
+if sys.platform == 'win32':
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    sys.stderr.reconfigure(encoding='utf-8', errors='replace')
 
 # Add client directory to path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -16,37 +23,37 @@ def test_imports():
 
     try:
         from app.config import config, save_config
-        print("  ✓ app.config")
+        print("  [OK] app.config")
     except Exception as e:
-        print(f"  ✗ app.config: {e}")
+        print(f"  [FAIL] app.config: {e}")
         return False
 
     try:
         from app.api_client import api_client
-        print("  ✓ app.api_client")
+        print("  [OK] app.api_client")
     except Exception as e:
-        print(f"  ✗ app.api_client: {e}")
+        print(f"  [FAIL] app.api_client: {e}")
         return False
 
     try:
         from app.recorder import recorder
-        print("  ✓ app.recorder")
+        print("  [OK] app.recorder")
     except Exception as e:
-        print(f"  ✗ app.recorder: {e}")
+        print(f"  [FAIL] app.recorder: {e}")
         return False
 
     try:
         from app.text_input import output_text, copy_to_clipboard
-        print("  ✓ app.text_input")
+        print("  [OK] app.text_input")
     except Exception as e:
-        print(f"  ✗ app.text_input: {e}")
+        print(f"  [FAIL] app.text_input: {e}")
         return False
 
     try:
         from app.hotkey import hotkey_listener, HotkeyAction
-        print("  ✓ app.hotkey")
+        print("  [OK] app.hotkey")
     except Exception as e:
-        print(f"  ✗ app.hotkey: {e}")
+        print(f"  [FAIL] app.hotkey: {e}")
         return False
 
     return True
@@ -60,7 +67,7 @@ def test_audio_devices():
         from app.recorder import recorder
 
         devices = recorder.get_input_devices()
-        print(f"  ✓ Found {len(devices)} input devices:")
+        print(f"  [OK] Found {len(devices)} input devices:")
         for dev in devices[:3]:  # Show first 3
             print(f"    - {dev['name']}")
         if len(devices) > 3:
@@ -68,7 +75,7 @@ def test_audio_devices():
 
         return True
     except Exception as e:
-        print(f"  ✗ Audio device error: {e}")
+        print(f"  [FAIL] Audio device error: {e}")
         return False
 
 
@@ -86,14 +93,14 @@ def test_clipboard():
         # Verify
         read_text = pyperclip.paste()
         if read_text == test_text:
-            print(f"  ✓ Clipboard working: '{read_text}'")
+            print(f"  [OK] Clipboard working: '{read_text}'")
             return True
         else:
-            print(f"  ✗ Clipboard mismatch: expected '{test_text}', got '{read_text}'")
+            print(f"  [FAIL] Clipboard mismatch: expected '{test_text}', got '{read_text}'")
             return False
 
     except Exception as e:
-        print(f"  ✗ Clipboard error: {e}")
+        print(f"  [FAIL] Clipboard error: {e}")
         return False
 
 
@@ -110,16 +117,16 @@ def test_config():
         assert config.hotkeys.translate_zh_to_en == "shift"
         assert config.hotkeys.translate_en_to_zh == "shift+a"
 
-        print("  ✓ Configuration defaults correct")
+        print("  [OK] Configuration defaults correct")
 
         # Test save
         save_config(config)
-        print("  ✓ Configuration saved")
+        print("  [OK] Configuration saved")
 
         return True
 
     except Exception as e:
-        print(f"  ✗ Configuration error: {e}")
+        print(f"  [FAIL] Configuration error: {e}")
         return False
 
 
@@ -134,15 +141,15 @@ def test_api_client():
         api_client.set_base_url("http://localhost:8000")
         api_client.set_api_key("test_key")
 
-        print(f"  ✓ API client configured: {api_client.base_url}")
+        print(f"  [OK] API client configured: {api_client.base_url}")
 
         # Note: Actual connection test requires running server
-        print("  ℹ Server connection test skipped (server not running)")
+        print("  [INFO] Server connection test skipped (server not running)")
 
         return True
 
     except Exception as e:
-        print(f"  ✗ API client error: {e}")
+        print(f"  [FAIL] API client error: {e}")
         return False
 
 
@@ -156,7 +163,7 @@ def test_recording():
 
         # Start recording
         recorder.start_recording()
-        print("  ✓ Recording started")
+        print("  [OK] Recording started")
 
         # Record briefly
         time.sleep(0.5)
@@ -164,14 +171,14 @@ def test_recording():
         # Stop recording (result will be None for short audio)
         result = recorder.stop_recording()
         if result is None:
-            print("  ✓ Recording stopped (audio too short as expected)")
+            print("  [OK] Recording stopped (audio too short as expected)")
         else:
-            print(f"  ✓ Recording saved: {result}")
+            print(f"  [OK] Recording saved: {result}")
 
         return True
 
     except Exception as e:
-        print(f"  ✗ Recording error: {e}")
+        print(f"  [FAIL] Recording error: {e}")
         return False
 
 
@@ -204,10 +211,10 @@ def main():
     print(f"\nTotal: {passed}/{len(results)} tests passed")
 
     if passed == len(results):
-        print("\n✓ All tests passed!")
+        print("\n[SUCCESS] All tests passed!")
         return 0
     else:
-        print("\n✗ Some tests failed")
+        print("\n[FAILED] Some tests failed")
         return 1
 
 

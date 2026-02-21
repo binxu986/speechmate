@@ -88,17 +88,32 @@ def get_session():
         session.close()
 
 
-def verify_api_key(api_key: str) -> Optional[APIKey]:
-    """Verify API key and return the key object if valid"""
+def verify_api_key(api_key: str) -> Optional[dict]:
+    """Verify API key and return the key info if valid"""
     with get_session() as session:
         key_obj = session.query(APIKey).filter(
             APIKey.key == api_key,
             APIKey.is_active == True
         ).first()
         if key_obj:
+            # Get all needed attributes before modifying
+            key_id = key_obj.id
+            key_key = key_obj.key
+            key_name = key_obj.name
+            key_active = key_obj.is_active
+
+            # Update last used time
             key_obj.last_used_at = datetime.utcnow()
             session.commit()
-        return key_obj
+
+            # Return a dict with pre-fetched values
+            return {
+                "id": key_id,
+                "key": key_key,
+                "name": key_name,
+                "is_active": key_active
+            }
+        return None
 
 
 def log_usage(

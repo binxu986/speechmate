@@ -1,36 +1,37 @@
 # SpeechMate Host Server Dependencies
 
 # Web Framework
-fastapi==0.109.0
-uvicorn[standard]==0.27.0
-flask==3.0.0
-werkzeug==3.0.1
+fastapi>=0.109.0
+uvicorn>=0.27.0
+flask>=3.0.0
+werkzeug>=3.0.1
 
 # ASR Models
-faster-whisper==1.0.1
+faster-whisper>=1.0.0
+ctranslate2>=4.0.0
 
 # Audio Processing
-soundfile==0.12.1
+soundfile>=0.12.0
 
 # Database
-sqlalchemy==2.0.25
+sqlalchemy>=2.0.0
 
 # HTTP Client
-requests==2.31.0
+requests>=2.31.0
 
 # Utilities
-python-dotenv==1.0.0
-pyyaml==6.0.1
-python-multipart==0.0.6
+python-dotenv>=1.0.0
+pyyaml>=6.0
+python-multipart>=0.0.6
 
 # Logging
-loguru==0.7.2
+loguru>=0.7.0
 
 # System
-psutil==5.9.7
+psutil>=5.9.0
 
 # Optional: Local Translation Models (uncomment if needed)
-# transformers==4.37.0
-# torch==2.1.2
-# sentencepiece==0.1.99
-# sacremoses==0.1.1
+# transformers>=4.30.0
+# torch>=2.0.0
+# sentencepiece>=0.1.99
+# sacremoses>=0.1.1

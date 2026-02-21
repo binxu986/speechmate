@@ -109,7 +109,7 @@ async def translate_audio(
 
         # Log usage
         log_usage(
-            api_key_id=api_key_obj.id,
+            api_key_id=api_key_obj["id"],
             endpoint="translate",
             audio_duration=audio_duration,
             processing_time=total_time,
@@ -134,7 +134,7 @@ async def translate_audio(
 
         # Log failed usage
         log_usage(
-            api_key_id=api_key_obj.id,
+            api_key_id=api_key_obj["id"],
             endpoint="translate",
             processing_time=total_time,
             source_lang=source_lang,
