@@ -37,17 +37,17 @@ env/
 logs/
 *.log
 
-# Database
-*.db
-*.sqlite
-*.sqlite3
+# Data directory - keep structure, ignore runtime files
+data/
+!data/.gitkeep  # Preserve directory structure
+data/*.db
+data/*.sqlite
+data/*.sqlite3
+data/*.log
 
 # Model Cache
 model_cache/
 models/
-
-# Data
-data/
 *.wav
 *.mp3
 *.m4a
