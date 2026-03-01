@@ -1,0 +1,3 @@
+"""
+SpeechMate Host Tests Package
+"""

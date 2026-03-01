@@ -3,6 +3,9 @@
 """
 SpeechMate Host Server Test Script
 Tests basic functionality without starting the server
+
+Run with: python test_server.py
+Or with pytest: pytest tests/ -v
 """
 import sys
 import os
@@ -36,17 +39,10 @@ def test_imports():
         return False
 
     try:
-        from models.asr_model import get_asr_model
+        from models.asr_model import get_asr_model, transcribe_audio, get_audio_duration, unload_model
         print("  [OK] models.asr_model")
     except Exception as e:
         print(f"  [FAIL] models.asr_model: {e}")
-        return False
-
-    try:
-        from models.translation_model import translate_text
-        print("  [OK] models.translation_model")
-    except Exception as e:
-        print(f"  [FAIL] models.translation_model: {e}")
         return False
 
     return True
@@ -71,40 +67,6 @@ def test_database():
         return False
 
 
-def test_translation():
-    """Test translation functionality"""
-    print("\nTesting translation...")
-
-    try:
-        from models.translation_model import translate_text
-
-        # Test with simple text
-        text, time_taken = translate_text("Hello", "en", "zh")
-        print(f"  [OK] Translation: 'Hello' -> '{text}' ({time_taken:.2f}s)")
-
-        return True
-    except Exception as e:
-        print(f"  [FAIL] Translation error: {e}")
-        return False
-
-
-def test_asr_model():
-    """Test ASR model loading"""
-    print("\nTesting ASR model (this may take a while)...")
-
-    try:
-        from models.asr_model import get_asr_model
-
-        # Load the smallest model for testing
-        model = get_asr_model("tiny", "cpu", "int8")
-        print("  [OK] ASR model loaded (tiny)")
-
-        return True
-    except Exception as e:
-        print(f"  [FAIL] ASR model error: {e}")
-        return False
-
-
 def test_config():
     """Test configuration"""
     print("\nTesting configuration...")
@@ -122,6 +84,50 @@ def test_config():
         return False
 
 
+def test_asr_model_loading():
+    """Test ASR model loading"""
+    print("\nTesting ASR model (this may take a while on first run)...")
+
+    try:
+        from models.asr_model import get_asr_model, unload_model, get_model_info
+
+        # Load the smallest model for testing
+        model = get_asr_model("tiny", "cpu", "int8")
+        print("  [OK] ASR model loaded (tiny)")
+
+        info = get_model_info()
+        print(f"  [OK] Model info: {info}")
+
+        # Unload model
+        unload_model()
+        print("  [OK] Model unloaded")
+
+        return True
+    except Exception as e:
+        print(f"  [FAIL] ASR model error: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
+def test_api_endpoints():
+    """Test API endpoint imports"""
+    print("\nTesting API endpoints...")
+
+    try:
+        from app.main import app
+        print("  [OK] FastAPI app imported")
+
+        # Check routes
+        routes = [route.path for route in app.routes]
+        print(f"  [OK] Routes: {routes}")
+
+        return True
+    except Exception as e:
+        print(f"  [FAIL] API error: {e}")
+        return False
+
+
 def main():
     """Run all tests"""
     print("=" * 50)
@@ -133,8 +139,15 @@ def main():
     results.append(("Imports", test_imports()))
     results.append(("Config", test_config()))
     results.append(("Database", test_database()))
-    results.append(("Translation", test_translation()))
-    results.append(("ASR Model", test_asr_model()))
+    results.append(("API Endpoints", test_api_endpoints()))
+
+    # Ask before loading model (requires download)
+    print("\n" + "-" * 50)
+    response = input("Test ASR model loading? (requires download, y/n): ").strip().lower()
+    if response == 'y':
+        results.append(("ASR Model", test_asr_model_loading()))
+    else:
+        print("Skipping ASR model test")
 
     print("\n" + "=" * 50)
     print("Test Results:")

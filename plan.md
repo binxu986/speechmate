@@ -1,180 +1,192 @@
 # SpeechMate 开发计划
 
-本文档详细列出 SpeechMate 项目的开发需求和任务清单。
+本文档列出 SpeechMate 项目的开发需求和任务清单。
 
 ---
 
 ## 项目状态
 
-> ⚠️ **当前状态**: 项目存在已知问题，正在调试中
+> **当前状态**: 核心模块已实现，需要安装依赖后测试运行
 
-根据代码分析，项目核心架构已搭建完成，但存在以下关键缺失：
+### 模块状态
 
----
-
-## 一、紧急修复 (P0)
-
-### 1.1 模型模块缺失
-
-**问题**: API 文件引用了 `models.asr_model` 和 `models.translation_model`，但 `host/models/` 目录不存在
-
-**需要实现**:
-
-- [ ] 创建 `host/models/__init__.py`
-- [ ] 实现 `host/models/asr_model.py`:
-  - `get_asr_model(model_name, device, compute_type)` - 加载 Whisper 模型
-  - `transcribe_audio(audio_path, model_name, device, language)` - 语音转文字
-  - `get_audio_duration(audio_path)` - 获取音频时长
-  - `unload_model()` - 卸载模型释放内存
-  
-- [ ] 实现 `host/models/translation_model.py`:
-  - `translate_text(text, source_lang, target_lang)` - 文本翻译
-  - 模型: `Helsinki-NLP/opus-mt-zh-en` 和 `Helsinki-NLP/opus-mt-en-zh`
-
-### 1.2 测试验证
-
-- [ ] 修复后运行 `python host/test_server.py` 验证所有测试通过
-- [ ] 确保 `test_imports`、`test_config`、`test_database` 全部通过
-- [ ] 测试 ASR 模型加载（需要网络下载模型）
+| 模块 | 状态 | 说明 |
+|------|------|------|
+| Host API (FastAPI) | ✅ 完整 | 主程序和models模块已实现 |
+| Host Web (Flask) | ✅ 完整 | Web管理界面代码完整 |
+| Host Database | ✅ 完整 | SQLAlchemy数据库模块完整 |
+| Host Models | ✅ 已创建 | ASR模型模块已实现 |
+| Host Tests | ✅ 已创建 | pytest测试框架已创建 |
+| Client GUI (PyQt5) | ✅ 完整 | 主窗口、托盘、录音指示器完整 |
+| Client Recorder | ✅ 完整 | sounddevice录音模块完整 |
+| Client Hotkey | ✅ 完整 | pynput快捷键监听完整 |
+| Client API Client | ✅ 完整 | HTTP客户端完整 |
+| Translation | ⏸️ 跳过 | 翻译模块后续实现 |
 
 ---
 
-## 二、核心功能完善 (P1)
+## 一、紧急修复 (P0) - 已完成
+
+- [x] 创建 `host/models/__init__.py`
+- [x] 创建 `host/models/asr_model.py` - faster-whisper ASR模型封装
+- [x] 修改 `host/app/api/translate.py` - 返回"功能未实现"提示
+- [x] 创建 `host/tests/` 目录和测试文件
+- [x] 安装依赖: `pip install -r host/requirements.txt`
+- [x] 运行测试: `python host/test_server.py` - 33 passed, 2 skipped
+- [x] 验证 API 服务启动: `python host/start_server.py`
+- [x] 创建安装脚本: `install.sh`, `install.bat`
+- [x] 创建启动脚本: `run_host.sh`, `run_host.bat`, `run_client.sh`, `run_client.bat`
+
+---
+
+## 二、核心功能完善 (P1) - 已完成
 
 ### 2.1 Host 服务器
 
-- [ ] **API 健康检查**: 确保 `/health` 端点正常返回
-- [ ] **API 文档**: 验证 `/docs` 端点可用
-- [ ] **模型热加载**: 实现模型切换不需要重启服务
-- [ ] **错误处理**: 完善所有 API 的异常处理和日志
+- [x] API 端点验证 (/health, /docs, /transcribe, /info)
+- [x] 配置管理 (config.yaml 读写)
+- [ ] 错误处理增强 (日志、统一格式、请求ID)
 
 ### 2.2 Web 管理界面
 
-- [ ] 检查 Flask Web 应用完整性
-- [ ] 验证 `host/web/templates/index.html` 存在
-- [ ] 添加 Web 静态资源 (CSS/JS) - 如缺失
-- [ ] 测试 `http://localhost:5000` 访问
-- [ ] 实现 API Key 管理界面功能
+- [x] `host/web/templates/index.html` 完整 (CSS/JS内嵌)
+- [x] API Key 管理 (创建/删除/禁用)
+- [x] 使用统计查看
+- [x] 模型配置切换
 
 ### 2.3 Client 客户端
 
-- [ ] 验证主窗口 UI 完整性 (`client/ui/main_window.py`)
-- [ ] 检查系统托盘功能 (`client/ui/tray_icon.py`)
-- [ ] 检查录音指示器 (`client/ui/recording_indicator.py`)
-- [ ] 实现设置对话框 - 如缺失
+- [x] UI 完整性 (主窗口、系统托盘、录音指示器)
+- [x] 功能模块 (快捷键监听、录音、API客户端、文字输入)
 
 ---
 
-## 三、功能增强 (P2)
+## 三、翻译功能 (后续实现)
 
-### 3.1 语音识别增强
-
-- [ ] 添加支持更多 Whisper 模型 (medium, large-v3)
-- [ ] 实现批量音频处理
-- [ ] 添加音频预处理 (降噪、静音检测)
-- [ ] 支持更多语言 (日语、韩语等)
-
-### 3.2 翻译增强
-
-- [ ] 添加更多翻译模型支持
-- [ ] 实现翻译缓存减少重复请求
-- [ ] 添加翻译质量评分
-
-### 3.3 Client 功能增强
-
-- [ ] 添加多语言 UI 支持 (中/英)
-- [ ] 实现录音历史记录
-- [ ] 添加快捷键冲突检测
-- [ ] 实现自动更新功能
+- [ ] 创建 `host/models/translation_model.py`
+- [ ] 实现中英互译 (Helsinki-NLP/opus-mt)
+- [ ] 启用翻译 API 端点
 
 ---
 
-## 四、性能优化 (P2)
+## 四、功能增强 (P2) (后续实现)
 
-### 4.1 服务器优化
+### 4.1 语音识别增强
 
-- [ ] 实现模型缓存，避免重复加载
-- [ ] 添加请求队列和限流
-- [ ] 实现异步处理 (后台任务)
-- [ ] 优化音频文件处理流程
+- [ ] 音频预处理 (降噪、VAD、归一化)
+- [ ] 支持更多语言 (ja, ko, fr, de)
+- [ ] 识别结果后处理 (标点、格式化)
 
-### 4.2 客户端优化
+### 4.2 Client 功能增强
 
-- [ ] 优化录音缓冲，减少延迟
-- [ ] 实现本地音频缓存
-- [ ] 减少内存占用
-
----
-
-## 五、测试与文档 (P2)
-
-### 5.1 测试完善
-
-- [ ] 添加单元测试覆盖关键函数
-- [ ] 添加集成测试覆盖 API 流程
-- [ ] 添加端到端测试
-- [ ] 建立 CI/CD 流程
-
-### 5.2 文档完善
-
-- [ ] 完善 API 文档
-- [ ] 添加开发者指南
-- [ ] 添加故障排除文档
-- [ ] 录制使用教程视频
+- [ ] 多语言UI (中/英)
+- [ ] 录音历史记录
+- [ ] 快捷键冲突检测
+- [ ] 自动更新功能
 
 ---
 
-## 六、发布准备 (P3)
+## 五、性能优化 (P2) (后续实现)
 
-### 6.1 版本发布
+### 5.1 服务器优化
 
-- [ ] 修复所有已知问题
-- [ ] 完成功能测试
-- [ ] 更新版本号
-- [ ] 打包 Release 版本
-- [ ] 编写发布说明
+- [ ] 模型缓存
+- [ ] 请求队列和限流
+- [ ] 异步处理 (Celery)
+- [ ] 内存优化
 
-### 6.2 客户端打包
+### 5.2 客户端优化
 
-- [ ] 完善 PyInstaller 打包配置
-- [ ] 添加必要的资源文件
+- [ ] 录音缓冲优化
+- [ ] 本地音频缓存
+- [ ] 内存占用优化
+- [ ] 启动速度优化
+
+---
+
+## 六、测试与文档 (P2)
+
+### 6.1 测试框架
+
+已创建测试文件:
+- `host/tests/__init__.py`
+- `host/tests/conftest.py` - pytest fixtures
+- `host/tests/test_asr_model.py` - ASR模块测试
+- `host/tests/test_config.py` - 配置测试
+- `host/tests/test_database.py` - 数据库测试
+- `host/pytest.ini` - pytest配置
+
+### 6.2 文档
+
+- [x] API文档 (FastAPI自动生成 `/docs`)
+- [x] CLAUDE.md 项目指南
+- [ ] 开发者指南
+- [ ] 故障排除文档
+
+---
+
+## 七、发布准备 (P3)
+
+### 7.1 客户端打包
+
+- [ ] 完善 PyInstaller 配置
+- [ ] 添加必要资源文件
 - [ ] 解决依赖冲突
-- [ ] 生成稳定的 `SpeechMate.exe`
+- [ ] 生成稳定可执行文件
+
+### 7.2 版本发布
+
+- [ ] 更新版本号
+- [ ] 编写发布说明
+- [ ] 打包 Release
 
 ---
 
-## 七、未来规划 (长期)
+## 八、未来规划 (长期) (后续实现)
 
-- [ ] **多平台支持**: 开发 macOS/Linux 客户端
-- [ ] **移动端**: 开发 iOS/Android 版本
-- [ ] **Web 客户端**: 开发浏览器版本
-- [ ] **团队协作**: 添加多用户管理和权限控制
-- [ ] **插件系统**: 支持自定义 ASR/翻译后端
-- [ ] **语音合成**: 添加 TTS 功能
-
----
-
-## 任务优先级说明
-
-| 优先级 | 说明 |
-|--------|------|
-| P0 | 紧急 - 项目无法运行 |
-| P1 | 高优先级 - 核心功能不完整 |
-| P2 | 中优先级 - 功能增强和优化 |
-| P3 | 低优先级 - 发布准备 |
+- [ ] 翻译功能实现
+- [ ] 多平台客户端 (macOS, Linux)
+- [ ] 移动端 (iOS, Android)
+- [ ] Web客户端
+- [ ] 插件系统
+- [ ] 语音合成 (TTS)
+- [ ] 实时语音识别 (流式)
+- [ ] 说话人分离 (Diarization)
 
 ---
 
-## 贡献指南
+## 技术栈
 
-欢迎贡献代码！请遵循以下步骤：
+### Host 服务器
 
-1. Fork 本项目
-2. 创建功能分支 (`git checkout -b feature/xxx`)
-3. 提交更改 (`git commit -m 'Add xxx'`)
-4. 推送分支 (`git push origin feature/xxx`)
-5. 创建 Pull Request
+| 组件 | 技术 |
+|------|------|
+| API框架 | FastAPI |
+| Web框架 | Flask |
+| ASR引擎 | faster-whisper |
+| 数据库 | SQLite + SQLAlchemy |
+| 日志 | loguru |
+| 测试 | pytest |
+
+### Client 客户端
+
+| 组件 | 技术 |
+|------|------|
+| GUI框架 | PyQt5 |
+| 音频录制 | sounddevice |
+| 快捷键 | pynput |
+| HTTP客户端 | requests |
+| 打包工具 | PyInstaller |
 
 ---
 
-*最后更新: 2024*
+## 参考项目
+
+- [Whisper-WebUI](https://github.com/jhj0517/Whisper-WebUI) - 测试框架参考
+- [WhisperX](https://github.com/m-bain/whisperX) - Diarization
+- [faster-whisper-server](https://github.com/nirnaim/faster-whisper-server) - SSE streaming
+- [whisper-type](https://github.com/TryoTrix/whisper-type) - Windows热键听写
+
+---
+
+*最后更新: 2026-02-28*

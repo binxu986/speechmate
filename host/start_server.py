@@ -67,10 +67,7 @@ def install_dependencies():
     log("Installing dependencies...")
     pip_exe = get_pip_executable()
 
-    # Upgrade pip first
-    subprocess.run([pip_exe, "install", "--upgrade", "pip"], check=True)
-
-    # Install requirements
+    # Install requirements (skip pip upgrade to avoid Windows issues)
     requirements_file = BASE_DIR / "requirements.txt"
     subprocess.run([pip_exe, "install", "-r", str(requirements_file)], check=True)
     log("Dependencies installed")
