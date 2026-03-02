@@ -74,27 +74,27 @@ def install_dependencies():
 
 
 def download_models():
-    """Pre-download models (optional)"""
-    log("Pre-downloading models (this may take a while)...")
+    """Pre-download models using the download utility"""
+    log("Pre-downloading ASR model...")
 
     python_exe = get_python_executable()
+    download_script = BASE_DIR / "download_model.py"
 
-    # Download a small model by default
-    download_script = '''
-import sys
-sys.path.insert(0, ".")
-from faster_whisper import WhisperModel
-print("Downloading faster-whisper-small model...")
-model = WhisperModel("small", device="cpu", compute_type="int8", download_root="./model_cache")
-print("Model downloaded successfully")
-'''
+    if not download_script.exists():
+        log("Download script not found, skipping model download")
+        return
 
+    # Use the download_model.py script
     try:
-        subprocess.run(
-            [python_exe, "-c", download_script],
+        result = subprocess.run(
+            [python_exe, str(download_script), "--model", "small"],
             cwd=str(BASE_DIR),
             timeout=600  # 10 minutes timeout
         )
+        if result.returncode == 0:
+            log("ASR model downloaded successfully")
+        else:
+            log("Model download failed - will download on first use")
     except subprocess.TimeoutExpired:
         log("Model download timeout - will download on first use")
     except Exception as e:
