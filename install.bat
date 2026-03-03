@@ -1,72 +1,63 @@
 @echo off
 REM SpeechMate Installation Script for Windows
-REM This script creates virtual environments and installs all dependencies
+REM One-click installation for development environment
 
 setlocal EnableDelayedExpansion
-
-echo ========================================
-echo   SpeechMate Installation Script
-echo ========================================
-
-REM Get script directory
 cd /d "%~dp0"
 
-REM Install Host dependencies
 echo.
-echo [Installing Host dependencies...]
+echo ========================================
+echo   SpeechMate Installation
+echo ========================================
+echo.
+
+REM Check Python
+python --version >nul 2>&1
+if errorlevel 1 (
+    echo [ERROR] Python not found. Please install Python 3.10+
+    pause
+    exit /b 1
+)
+
+REM Install Host
+echo [1/3] Installing Host dependencies...
 cd /d "%~dp0host"
-
 if not exist "venv" (
-    echo Creating virtual environment for host...
     python -m venv venv
 )
-
-echo Activating host virtual environment...
 call venv\Scripts\activate.bat
-
-echo Installing Python packages...
-pip install -r requirements.txt
-
+pip install -q --upgrade pip
+pip install -q -r requirements.txt
 call deactivate
-echo [Host dependencies installed!]
+echo       Host dependencies installed!
 
-REM Install Client dependencies
-echo.
-echo [Installing Client dependencies...]
+REM Install Client
+echo [2/3] Installing Client dependencies...
 cd /d "%~dp0client"
-
 if not exist "venv" (
-    echo Creating virtual environment for client...
     python -m venv venv
 )
-
-echo Activating client virtual environment...
 call venv\Scripts\activate.bat
-
-echo Installing Python packages...
-pip install -r requirements.txt
-
+pip install -q --upgrade pip
+pip install -q -r requirements.txt
 call deactivate
-echo [Client dependencies installed!]
+echo       Client dependencies installed!
 
-REM Ask about model download
-echo.
-set /p DOWNLOAD_CHOICE="Download ASR model now? (y/n, default: n): "
-if /i "%DOWNLOAD_CHOICE%"=="y" (
-    echo Downloading ASR model...
-    cd /d "%~dp0host"
-    call venv\Scripts\activate.bat
-    python -c "import sys; sys.path.insert(0, '.'); from faster_whisper import WhisperModel; print('Downloading faster-whisper-small model...'); model = WhisperModel('small', device='cpu', compute_type='int8', download_root='./model_cache'); print('Model downloaded successfully')" 2>nul || echo Model download skipped - will download on first use
-    call deactivate
-)
+REM Download ASR Model
+echo [3/3] Downloading ASR model...
+cd /d "%~dp0host"
+call venv\Scripts\activate.bat
+python download_model.py --model small
+call deactivate
 
 echo.
 echo ========================================
 echo   Installation Complete!
 echo ========================================
 echo.
-echo To start the host server:  run_host.bat
-echo To start the client:       run_client.bat
+echo Quick Start:
+echo   Host:   run_host.bat
+echo   Client: run_client.bat
+echo   All:    start_all.bat
 echo.
-
 pause

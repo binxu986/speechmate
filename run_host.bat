@@ -1,26 +1,16 @@
 @echo off
-REM SpeechMate Host Server Start Script for Windows
+REM SpeechMate Host Server - Quick Start
 
 cd /d "%~dp0host"
 
-echo Starting SpeechMate Host Server...
+echo Starting SpeechMate Host...
 
-REM Check if venv exists
 if not exist "venv" (
-    echo Virtual environment not found. Run install.bat first.
+    echo [ERROR] venv not found. Run install.bat first.
     pause
     exit /b 1
 )
 
-REM Activate venv
 call venv\Scripts\activate.bat
-
-REM Create data directory if needed
-if not exist "data" mkdir data
-if not exist "logs" mkdir logs
-if not exist "model_cache" mkdir model_cache
-
-REM Start the server
 python start_server.py %*
-
 call deactivate

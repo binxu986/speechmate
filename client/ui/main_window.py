@@ -31,6 +31,7 @@ class MainWindow(QMainWindow):
     # Signal for thread-safe UI updates
     status_signal = pyqtSignal(str)
     processing_signal = pyqtSignal(bool)
+    start_recording_signal = pyqtSignal(str)  # mode: transcribe, translate_zh_en, translate_en_zh
 
     def __init__(self):
         super().__init__()
@@ -48,6 +49,7 @@ class MainWindow(QMainWindow):
         # Connect signals
         self.status_signal.connect(self._update_status)
         self.processing_signal.connect(self._set_processing)
+        self.start_recording_signal.connect(self._start_recording)
 
         # Load config to UI
         self._load_config_to_ui()
@@ -228,17 +230,17 @@ class MainWindow(QMainWindow):
     def _on_transcribe(self):
         """Handle transcribe hotkey"""
         logger.info("Transcribe hotkey triggered")
-        self._start_recording("transcribe")
+        self.start_recording_signal.emit("transcribe")
 
     def _on_translate_zh_to_en(self):
         """Handle translate zh->en hotkey"""
         logger.info("Translate zh->en hotkey triggered")
-        self._start_recording("translate_zh_en")
+        self.start_recording_signal.emit("translate_zh_en")
 
     def _on_translate_en_to_zh(self):
         """Handle translate en->zh hotkey"""
         logger.info("Translate en->zh hotkey triggered")
-        self._start_recording("translate_en_zh")
+        self.start_recording_signal.emit("translate_en_zh")
 
     def _start_recording(self, mode: str):
         """Start recording audio"""
@@ -264,8 +266,7 @@ class MainWindow(QMainWindow):
 
     def _check_recording_done(self):
         """Check if recording should stop"""
-        # Check if hotkey is still pressed
-        from pynput import keyboard
+        import keyboard
 
         # Get current hotkey
         if self.recording_mode == "transcribe":
@@ -275,17 +276,11 @@ class MainWindow(QMainWindow):
         else:
             key_str = config.hotkeys.translate_en_to_zh
 
-        # Check if modifier key is still pressed
-        still_pressed = False
-
-        if "shift" in key_str.lower():
-            still_pressed = any(k.is_pressed for k in [keyboard.Key.shift, keyboard.Key.shift_l, keyboard.Key.shift_r])
-        if "alt" in key_str.lower():
-            still_pressed = still_pressed or any(k.is_pressed for k in [keyboard.Key.alt, keyboard.Key.alt_l, keyboard.Key.alt_r])
-        if "ctrl" in key_str.lower():
-            still_pressed = still_pressed or any(k.is_pressed for k in [keyboard.Key.ctrl, keyboard.Key.ctrl_l, keyboard.Key.ctrl_r])
+        # Check if the main modifier key is still pressed
+        still_pressed = keyboard.is_pressed(key_str)
 
         if not still_pressed:
+            logger.info(f"Key '{key_str}' released, stopping recording")
             self._recording_timer.stop()
             self._stop_recording()
 
