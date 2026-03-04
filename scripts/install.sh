@@ -12,7 +12,7 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+cd "$SCRIPT_DIR/.."
 
 echo ""
 echo -e "${GREEN}========================================${NC}"
@@ -28,7 +28,7 @@ fi
 
 # Install Host
 echo -e "${BLUE}[1/3] Installing Host dependencies...${NC}"
-cd "$SCRIPT_DIR/host"
+cd "$SCRIPT_DIR/../host"
 if [ ! -d "venv" ]; then
     python -m venv venv
 fi
@@ -40,7 +40,7 @@ echo -e "      ${GREEN}Host dependencies installed!${NC}"
 
 # Install Client
 echo -e "${BLUE}[2/3] Installing Client dependencies...${NC}"
-cd "$SCRIPT_DIR/client"
+cd "$SCRIPT_DIR/../client"
 if [ ! -d "venv" ]; then
     python -m venv venv
 fi
@@ -52,7 +52,7 @@ echo -e "      ${GREEN}Client dependencies installed!${NC}"
 
 # Download ASR Model
 echo -e "${BLUE}[3/3] Downloading ASR model...${NC}"
-cd "$SCRIPT_DIR/host"
+cd "$SCRIPT_DIR/../host"
 source venv/Scripts/activate 2>/dev/null || source venv/bin/activate
 python download_model.py --model small
 deactivate
@@ -63,7 +63,7 @@ echo -e "${GREEN}  Installation Complete!${NC}"
 echo -e "${GREEN}========================================${NC}"
 echo ""
 echo "Quick Start:"
-echo -e "  Host:   ${YELLOW}./run_host.sh${NC}"
-echo -e "  Client: ${YELLOW}./run_client.sh${NC}"
-echo -e "  All:    ${YELLOW}./start_all.sh${NC}"
+echo -e "  Host:   ${YELLOW}./scripts/run_host.sh${NC}"
+echo -e "  Client: ${YELLOW}./scripts/run_client.sh${NC}"
+echo -e "  All:    ${YELLOW}./scripts/start_all.sh${NC}"
 echo ""

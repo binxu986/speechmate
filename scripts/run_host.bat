@@ -1,7 +1,7 @@
 @echo off
 REM SpeechMate Host Server - Quick Start
 
-cd /d "%~dp0host"
+cd /d "%~dp0..\host"
 
 echo Starting SpeechMate Host...
 

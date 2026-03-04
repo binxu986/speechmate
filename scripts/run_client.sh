@@ -2,7 +2,7 @@
 # SpeechMate Client - Quick Start
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR/client"
+cd "$SCRIPT_DIR/../client"
 
 echo "Starting SpeechMate Client..."
 

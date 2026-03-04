@@ -5,19 +5,25 @@ Tests for Flask routes in web/__init__.py
 """
 import pytest
 import sys
+import os
 from pathlib import Path
+from unittest.mock import patch, MagicMock
 
 
 @pytest.fixture
-def web_client():
-    """Create Flask test client"""
+def web_client(isolated_db):
+    """Create Flask test client with isolated database"""
     # Add host directory to path
     host_dir = Path(__file__).parent.parent
     sys.path.insert(0, str(host_dir))
 
-    from web import app as flask_app
-    flask_app.config['TESTING'] = True
-    return flask_app.test_client()
+    # Patch the database to use isolated test database
+    with patch('app.database.engine', isolated_db['engine']):
+        with patch('app.database.SessionLocal', isolated_db['SessionLocal']):
+            with patch('web.init_db'):  # Skip init_db in web module
+                from web import app as flask_app
+                flask_app.config['TESTING'] = True
+                yield flask_app.test_client()
 
 
 @pytest.fixture
@@ -189,6 +195,24 @@ class TestWebInfoRoute:
         assert "api_port" in data
         assert "current_model" in data
         assert "available_models" in data
+
+    def test_server_info_contains_model_cache_path(self, web_client):
+        """Test that server info includes model cache path"""
+        response = web_client.get("/api/info")
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data["success"] == True
+        assert "model_cache_path" in data
+        assert "model_cache" in data["model_cache_path"]
+
+    def test_index_page_contains_model_cache_path(self, web_client):
+        """Test that index page displays model cache path"""
+        response = web_client.get("/")
+        assert response.status_code == 200
+        data = response.data.decode('utf-8')
+        assert "model_cache_path" in data or "model_cache" in data
+        # Check for the Chinese label
+        assert "模型缓存目录" in data
 
 
 class TestWebErrorHandling:

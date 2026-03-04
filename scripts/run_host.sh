@@ -2,7 +2,7 @@
 # SpeechMate Host Server - Quick Start
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR/host"
+cd "$SCRIPT_DIR/../host"
 
 echo "Starting SpeechMate Host..."
 

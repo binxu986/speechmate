@@ -3,7 +3,7 @@ REM SpeechMate Installation Script for Windows
 REM One-click installation for development environment
 
 setlocal EnableDelayedExpansion
-cd /d "%~dp0"
+cd /d "%~dp0.."
 
 echo.
 echo ========================================
@@ -21,7 +21,7 @@ if errorlevel 1 (
 
 REM Install Host
 echo [1/3] Installing Host dependencies...
-cd /d "%~dp0host"
+cd /d "%~dp0..\host"
 if not exist "venv" (
     python -m venv venv
 )
@@ -33,7 +33,7 @@ echo       Host dependencies installed!
 
 REM Install Client
 echo [2/3] Installing Client dependencies...
-cd /d "%~dp0client"
+cd /d "%~dp0..\client"
 if not exist "venv" (
     python -m venv venv
 )
@@ -45,7 +45,7 @@ echo       Client dependencies installed!
 
 REM Download ASR Model
 echo [3/3] Downloading ASR model...
-cd /d "%~dp0host"
+cd /d "%~dp0..\host"
 call venv\Scripts\activate.bat
 python download_model.py --model small
 call deactivate
@@ -56,8 +56,8 @@ echo   Installation Complete!
 echo ========================================
 echo.
 echo Quick Start:
-echo   Host:   run_host.bat
-echo   Client: run_client.bat
-echo   All:    start_all.bat
+echo   Host:   scripts\run_host.bat
+echo   Client: scripts\run_client.bat
+echo   All:    scripts\start_all.bat
 echo.
 pause

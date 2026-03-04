@@ -82,7 +82,7 @@ class TestHotkeyListenerInit:
         """Test default initialization"""
         from app.hotkey import HotkeyListener
         listener = HotkeyListener()
-        assert listener._listener is None
+        assert listener._hook is None  # Changed from _listener to _hook (keyboard library)
         assert listener._callbacks == {}
         assert listener._is_active == False
 

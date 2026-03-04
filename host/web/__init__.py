@@ -8,11 +8,13 @@ from flask import Flask, render_template, jsonify, request, redirect, url_for
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from app.config import config, ASR_MODELS, get_base_url, get_local_ip, save_config
+from app.config import config, ASR_MODELS, get_base_url, get_local_ip, save_config, MODELS_DIR
 from app.database import (
     get_all_api_keys, create_api_key, delete_api_key, toggle_api_key,
     get_stats, init_db
 )
+from models.model_downloader import get_downloader, DownloadStatus
+from models.asr_model import check_available_models
 
 app = Flask(__name__)
 app.secret_key = config.jwt_secret
@@ -28,7 +30,8 @@ def index():
         current_model=config.model.asr_model,
         current_device=config.model.asr_device,
         available_models=ASR_MODELS,
-        api_keys=get_all_api_keys()
+        api_keys=get_all_api_keys(),
+        model_cache_path=str(MODELS_DIR)
     )
 
 
@@ -113,8 +116,171 @@ def server_info():
             "device": config.model.asr_device,
             "compute_type": config.model.asr_compute_type
         },
-        "available_models": ASR_MODELS
+        "available_models": ASR_MODELS,
+        "model_cache_path": str(MODELS_DIR)
     })
+
+
+# ============================================================================
+# Model Download Management API
+# ============================================================================
+
+@app.route("/api/models/status")
+def models_status():
+    """Get download status for all ASR models"""
+    try:
+        # Get downloaded models from asr_model module
+        downloaded = check_available_models()
+
+        # Get download progress from downloader
+        downloader = get_downloader()
+        download_status = downloader.get_all_download_status()
+
+        # Merge information
+        result = {}
+        for model_name in ASR_MODELS.keys():
+            is_downloaded = downloaded.get(model_name, False)
+            status = download_status.get(model_name, {})
+
+            result[model_name] = {
+                "name": ASR_MODELS[model_name]["name"],
+                "size": ASR_MODELS[model_name]["size"],
+                "description": ASR_MODELS[model_name]["description"],
+                "speed": ASR_MODELS[model_name]["speed"],
+                "accuracy": ASR_MODELS[model_name]["accuracy"],
+                "is_downloaded": is_downloaded,
+                "download_status": status.get("status", "idle"),
+                "download_progress": status.get("progress", 0),
+                "error_message": status.get("error_message", ""),
+                "elapsed_time": status.get("elapsed_time", 0)
+            }
+
+        return jsonify({"success": True, "models": result})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/models/<model_name>/status")
+def model_status(model_name):
+    """Get download status for a specific model"""
+    if model_name not in ASR_MODELS:
+        return jsonify({"success": False, "error": "Invalid model name"}), 400
+
+    try:
+        # Get downloaded status
+        downloaded = check_available_models()
+        is_downloaded = downloaded.get(model_name, False)
+
+        # Get download progress
+        downloader = get_downloader()
+        progress = downloader.get_model_status(model_name)
+
+        return jsonify({
+            "success": True,
+            "model": {
+                "name": ASR_MODELS[model_name]["name"],
+                "size": ASR_MODELS[model_name]["size"],
+                "is_downloaded": is_downloaded,
+                "download_status": progress.status.value,
+                "download_progress": progress.progress,
+                "error_message": progress.error_message,
+                "elapsed_time": progress._get_elapsed_time()
+            }
+        })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/models/<model_name>/download", methods=["POST"])
+def start_model_download(model_name):
+    """Start downloading a model"""
+    if model_name not in ASR_MODELS:
+        return jsonify({"success": False, "error": "Invalid model name"}), 400
+
+    try:
+        downloader = get_downloader()
+
+        # Check if already downloaded
+        if downloader.is_model_downloaded(model_name):
+            return jsonify({
+                "success": False,
+                "error": "Model already downloaded"
+            })
+
+        # Start download
+        started = downloader.start_download(
+            model_name,
+            device=config.model.asr_device,
+            compute_type=config.model.asr_compute_type
+        )
+
+        if started:
+            return jsonify({
+                "success": True,
+                "message": f"Started downloading {model_name}"
+            })
+        else:
+            # Check if already downloading
+            progress = downloader.get_model_status(model_name)
+            if progress.status == DownloadStatus.DOWNLOADING:
+                return jsonify({
+                    "success": False,
+                    "error": "Model is already downloading"
+                })
+            return jsonify({
+                "success": False,
+                "error": "Failed to start download"
+            })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/models/<model_name>/cancel", methods=["POST"])
+def cancel_model_download(model_name):
+    """Cancel an ongoing model download"""
+    if model_name not in ASR_MODELS:
+        return jsonify({"success": False, "error": "Invalid model name"}), 400
+
+    try:
+        downloader = get_downloader()
+        cancelled = downloader.cancel_download(model_name)
+
+        if cancelled:
+            return jsonify({
+                "success": True,
+                "message": f"Cancelled download for {model_name}"
+            })
+        else:
+            return jsonify({
+                "success": False,
+                "error": "No active download to cancel"
+            })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/models/<model_name>", methods=["DELETE"])
+def delete_model(model_name):
+    """Delete a downloaded model"""
+    if model_name not in ASR_MODELS:
+        return jsonify({"success": False, "error": "Invalid model name"}), 400
+
+    try:
+        downloader = get_downloader()
+        deleted = downloader.delete_model(model_name)
+
+        if deleted:
+            return jsonify({
+                "success": True,
+                "message": f"Deleted model {model_name}"
+            })
+        else:
+            return jsonify({
+                "success": False,
+                "error": "Model not found or could not be deleted"
+            })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 def run_web_server():

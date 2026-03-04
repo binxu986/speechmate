@@ -1,5 +1,3 @@
-# 当前还有问题，正在调试中···
-
 # SpeechMate - 语音识别与翻译助手
 
 SpeechMate 是一个开源的语音识别和翻译助手应用程序，包含服务器端（Host）和客户端（Client）两部分。
@@ -7,11 +5,25 @@ SpeechMate 是一个开源的语音识别和翻译助手应用程序，包含服
 ## 功能特点
 
 - 🎤 **语音识别**: 按住快捷键说话，松开后自动转文字
-- 🌐 **语音翻译**: 支持中英互译
-- ⌨️ **自动输入**: 识别/翻译的文字自动输入到光标位置
+- 🌐 **语音翻译**: 支持中英互译（待补充）
+- ⌨️ **自动输入**: 识别/翻译的文字自动输入到光标位置，如果不在输入状态下则自动输入到系统剪切板中
 - 📊 **Web 管理**: 提供 Web 界面管理 API Key 和查看统计
 - 🔧 **模型可选**: 支持多种大小的 Whisper 模型
 - 💻 **跨平台**: Host 支持 Windows 和 Linux
+
+## 后续功能
+
+### SpeechMate 阶段
+- 🎨 **更好看的 Client 界面**: 现代化 UI 设计，支持主题切换、动画效果
+- 🔍 **语音调用搜索引擎**: 通过语音快速搜索 Google、Bing、百度等
+- 🤖 **语音调用 AI 大模型**: 集成 ChatGPT、Claude、通义千问等，语音提问直接获取回答
+- 💬 **语音对话模式**: 连续语音交互，支持多轮对话
+
+### Agent 阶段
+- 🧚 **桌面精灵 Aurelia**: 可爱的桌面虚拟助手，具有表情动画和语音交互能力
+- 🎯 **智能任务执行**: 语音控制系统操作、文件管理、应用启动等
+- 📅 **日程管理**: 语音创建提醒、日程安排
+- 🌐 **多模态交互**: 结合视觉识别，实现更智能的桌面助手体验
 
 ## 系统架构
 
@@ -26,19 +38,40 @@ SpeechMate 是一个开源的语音识别和翻译助手应用程序，包含服
 
 ## 快速开始
 
-### Host 服务器
+### 一键启动 (推荐)
 
 ```bash
-cd host
-python start_server.py
+# Windows
+scripts\install.bat      # 首次安装
+scripts\start_all.bat    # 启动所有服务
+scripts\stop_all.bat     # 停止所有服务
+
+# Linux/Mac
+./scripts/install.sh
+./scripts/start_all.sh
+./scripts/stop_all.sh
 ```
 
-### Client 客户端
+### 单独启动
+
+#### Host 服务器
 
 ```bash
-cd client
-pip install -r requirements.txt
-python app/main.py
+# Windows
+scripts\run_host.bat
+
+# Linux/Mac
+./scripts/run_host.sh
+```
+
+#### Client 客户端
+
+```bash
+# Windows
+scripts\run_client.bat
+
+# Linux/Mac
+./scripts/run_client.sh
 ```
 
 ## 目录结构
@@ -56,6 +89,12 @@ speechmate/
 │   ├── ui/                # PyQt5 界面
 │   ├── build.py           # 打包脚本
 │   └── requirements.txt
+├── scripts/                # 脚本工具
+│   ├── install.bat/sh     # 一键安装
+│   ├── run_host.bat/sh    # 启动服务器
+│   ├── run_client.bat/sh  # 启动客户端
+│   ├── start_all.bat/sh   # 启动所有服务
+│   └── stop_all.bat/sh    # 停止所有服务
 ├── docs/                   # 文档
 │   ├── deployment_guide.md
 │   └── user_manual.md

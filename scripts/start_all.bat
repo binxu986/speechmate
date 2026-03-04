@@ -1,7 +1,7 @@
 @echo off
 REM SpeechMate - Start All Services (Host + Client)
 
-cd /d "%~dp0"
+cd /d "%~dp0.."
 
 echo.
 echo ========================================
@@ -11,7 +11,7 @@ echo.
 
 REM Start Host in background
 echo [1/2] Starting Host Server...
-cd /d "%~dp0host"
+cd /d "%~dp0..\host"
 if not exist "venv" (
     echo [ERROR] Host venv not found. Run install.bat first.
     pause
@@ -25,7 +25,7 @@ timeout /t 5 /nobreak >nul
 
 REM Start Client
 echo [2/2] Starting Client...
-cd /d "%~dp0client"
+cd /d "%~dp0..\client"
 if not exist "venv" (
     echo [ERROR] Client venv not found. Run install.bat first.
     pause

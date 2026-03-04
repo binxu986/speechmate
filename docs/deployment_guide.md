@@ -16,37 +16,68 @@
 
 ---
 
-## Host 服务器部署
+## 快速部署
 
-### 方法一：一键部署（推荐）
+### 一键安装和启动
 
-1. **克隆或下载项目**
 ```bash
+# 1. 克隆项目
 git clone https://github.com/binxu986/speechmate.git
-cd speechmate/host
+cd speechmate
+
+# 2. 安装依赖（Windows）
+scripts\install.bat
+
+# 3. 启动所有服务（Windows）
+scripts\start_all.bat
+
+# Linux/Mac 用户
+./scripts/install.sh
+./scripts/start_all.sh
 ```
 
-2. **运行启动脚本**
+### 单独启动服务
+
 ```bash
 # Windows
-python start_server.py
+scripts\run_host.bat      # 仅启动服务器
+scripts\run_client.bat    # 仅启动客户端
 
-# Linux
-python3 start_server.py
+# Linux/Mac
+./scripts/run_host.sh
+./scripts/run_client.sh
 ```
 
-3. **等待部署完成**
-- 脚本会自动创建虚拟环境
+### 停止服务
+
+```bash
+# Windows
+scripts\stop_all.bat
+
+# Linux/Mac
+./scripts/stop_all.sh
+```
+
+---
+
+## 详细部署说明
+
+### Host 服务器部署
+
+#### 方法一：一键启动（推荐）
+
+```bash
+cd speechmate/host
+python start_server.py
+```
+
+脚本会自动：
+- 创建虚拟环境
 - 安装所有依赖
 - 下载默认的语音识别模型（首次运行）
 - 启动 API 服务和 Web 管理界面
 
-4. **访问服务**
-- API 服务: `http://<服务器IP>:8000`
-- API 文档: `http://<服务器IP>:8000/docs`
-- Web 管理: `http://<服务器IP>:5000`
-
-### 方法二：手动部署
+#### 方法二：手动部署
 
 1. **创建虚拟环境**
 ```bash
@@ -74,38 +105,22 @@ python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
 python -m web.app
 ```
 
-### 停止服务
+### Client 客户端部署
 
-```bash
-# 使用停止脚本
-python stop_server.py
-
-# 或者按 Ctrl+C 停止 start_server.py
-```
-
----
-
-## Client 客户端部署
-
-### 方法一：使用打包好的 EXE（推荐）
+#### 方法一：使用打包好的 EXE（推荐）
 
 1. 从 Release 页面下载 `SpeechMate.exe`
 2. 双击运行，无需安装
 
-### 方法二：从源码运行
+#### 方法二：从源码运行
 
-1. **安装依赖**
 ```bash
 cd speechmate/client
 pip install -r requirements.txt
-```
-
-2. **运行程序**
-```bash
 python app/main.py
 ```
 
-### 方法三：自行打包 EXE
+#### 方法三：自行打包 EXE
 
 ```bash
 cd speechmate/client

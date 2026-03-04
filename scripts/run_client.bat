@@ -1,7 +1,7 @@
 @echo off
 REM SpeechMate Client - Quick Start
 
-cd /d "%~dp0client"
+cd /d "%~dp0..\client"
 
 echo Starting SpeechMate Client...
 

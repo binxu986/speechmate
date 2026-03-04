@@ -86,7 +86,8 @@ class MainWindow(QMainWindow):
 
         self.api_key_input = QLineEdit()
         self.api_key_input.setPlaceholderText("输入 API Key")
-        self.api_key_input.setEchoMode(QLineEdit.Password)
+        # Display API Key in plaintext for easy viewing and copying
+        self.api_key_input.setEchoMode(QLineEdit.Normal)
         server_layout.addRow("API Key:", self.api_key_input)
 
         self.test_btn = QPushButton("测试连接")

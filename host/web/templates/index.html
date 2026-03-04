@@ -78,6 +78,28 @@
             50% { opacity: 0.5; }
             100% { opacity: 1; }
         }
+        .model-download-badge {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+        }
+        .progress {
+            height: 8px;
+            border-radius: 4px;
+        }
+        .download-btn {
+            padding: 0.25rem 0.75rem;
+            font-size: 0.85rem;
+        }
+        .model-actions {
+            margin-top: 8px;
+        }
+        .downloading-indicator {
+            animation: blink 1s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
     </style>
 </head>
 <body>
@@ -145,22 +167,52 @@
                 </div>
 
                 <h6 class="mb-3">选择 ASR 模型</h6>
-                <div class="row">
+                <div class="alert alert-info py-2 mb-3" role="alert">
+                    <i class="bi bi-folder2-open"></i> <strong>模型缓存目录:</strong>
+                    <code id="modelCachePath">{{ model_cache_path }}</code>
+                    <i class="bi bi-clipboard copy-btn ms-2" onclick="copyToClipboard('modelCachePath')" title="复制路径"></i>
+                </div>
+                <div class="row" id="modelsContainer">
                     {% for model_id, model_info in available_models.items() %}
                     <div class="col-md-4 mb-3">
                         <div class="card model-card {% if model_id == current_model %}active{% endif %}"
-                             onclick="selectModel('{{ model_id }}')" data-model="{{ model_id }}">
+                             data-model="{{ model_id }}" id="model-card-{{ model_id }}">
                             <div class="card-body">
                                 <h6 class="card-title">
                                     {{ model_info.name }}
-                                    {% if model_id == current_model %}
-                                    <span class="badge bg-primary float-end">当前</span>
-                                    {% endif %}
+                                    <span class="badge model-download-badge float-end" id="badge-{{ model_id }}">
+                                        {% if model_id == current_model %}
+                                        当前
+                                        {% else %}
+                                        检查中...
+                                        {% endif %}
+                                    </span>
                                 </h6>
                                 <p class="card-text small text-muted">{{ model_info.description }}</p>
                                 <div class="d-flex justify-content-between small">
                                     <span><i class="bi bi-hdd"></i> {{ model_info.size }}</span>
                                     <span><i class="bi bi-speedometer2"></i> {{ model_info.speed }}</span>
+                                </div>
+                                <!-- Progress bar (hidden by default) -->
+                                <div class="progress mt-2 d-none" id="progress-{{ model_id }}">
+                                    <div class="progress-bar progress-bar-striped progress-bar-animated"
+                                         role="progressbar" style="width: 0%" id="progress-bar-{{ model_id }}"></div>
+                                </div>
+                                <small class="text-muted d-none" id="progress-text-{{ model_id }}"></small>
+                                <!-- Action buttons -->
+                                <div class="model-actions d-none" id="actions-{{ model_id }}">
+                                    <button class="btn btn-sm btn-outline-primary download-btn"
+                                            onclick="startDownload('{{ model_id }}')" id="download-btn-{{ model_id }}">
+                                        <i class="bi bi-download"></i> 下载
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-secondary download-btn d-none"
+                                            onclick="cancelDownload('{{ model_id }}')" id="cancel-btn-{{ model_id }}">
+                                        <i class="bi bi-x-circle"></i> 取消
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger download-btn d-none"
+                                            onclick="deleteModel('{{ model_id }}')" id="delete-btn-{{ model_id }}">
+                                        <i class="bi bi-trash"></i> 删除
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -394,6 +446,187 @@
 
         // Load stats on page load
         loadStats();
+
+
+        // Model Download Management Functions
+        let modelDownloadStatus = {};
+        let downloadPollInterval = null;
+
+        const DOWNLOADING_MODELS = ['tiny', 'base', 'small', 'medium', 'large-v3'];
+
+
+        // Initialize model status on page load
+        function initModelStatus() {
+            fetch('/api/models/status')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        modelDownloadStatus = data.models;
+                        updateModelCards();
+
+                        // Start polling for downloads
+                        downloadPollInterval = setInterval(() => {
+                            pollDownloadStatus();
+                        }, 2000);
+                    }
+                });
+        }
+
+        // Poll download status
+        function pollDownloadStatus() {
+            fetch('/api/models/status')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                    modelDownloadStatus = data.models;
+                        updateModelCards();
+                    }
+                });
+            });
+
+        // Update model card UI
+        function updateModelCards() {
+            for (const [modelName, modelInfo] of Object.entries(modelDownloadStatus)) {
+                const card = document.getElementById(`model-card-${modelName}`);
+                const badge = document.getElementById(`badge-${modelName}`);
+                const progressDiv = document.getElementById(`progress-${modelName}`);
+                const progressBar = document.getElementById(`progress-bar-${modelName}`);
+                const progressText = document.getElementById(`progress-text-${modelName}`);
+                const actionsDiv = document.getElementById(`actions-${modelName}`);
+
+                const isDownloaded = modelInfo.is_downloaded;
+                const status = modelInfo.download_status;
+                const progress = modelInfo.download_progress;
+                const error = modelInfo.error_message;
+
+                if (isDownloaded) {
+                    // Already downloaded
+                    badge.className = 'badge bg-success model-download-badge';
+                    badge.textContent = '已下载';
+                    badge.title = '已下载';
+                    actionsDiv.innerHTML = `
+                        <button class="btn btn-sm btn-outline-secondary download-btn"
+                            onclick="deleteModel('${modelName}')">
+                                <i class="bi bi-trash"></i> 删除
+                            </button>
+                        `;
+                        <small class="text-muted">点击 可以切换到此模型</small>
+                    `;
+                } else if (status === 'downloading') {
+                    // Downloading in progress
+                    badge.className = 'badge bg-info model-download-badge downloading-indicator';
+                    badge.textContent = `下载中... ${Math.round(progress)}%}%`;
+                    progressDiv.classList.remove('d-none');
+                    progressDiv.innerHTML = `
+                        <div class="progress-bar progress-bar-striped progress-bar-animated"
+                            role="progressbar" style="width: ${progress}%"></div>
+                    `;
+                    <small class="text-muted" id="progress-text-${modelName}">
+                        ${Math.round(progress)}%}% - ${Math.round(modelInfo.elapsed_time)}s
+                    </small>
+                    `;
+                    actionsDiv.innerHTML = `
+                        <button class="btn btn-sm btn-outline-secondary" onclick="cancelDownload('${modelName}')">
+                            <i class="bi bi-x-circle"></i> 取消
+                        </button>
+                        `;
+                } else if (status === 'completed') {
+                    // Just completed
+                    badge.className = 'badge bg-success model-download-badge';
+                    badge.textContent = '已完成';
+                    progressDiv.classList.remove('d-none');
+                    progressDiv.innerHTML = `
+                        <div class="progress-bar bg-success" role="progressbar" style="width: 100%"></div>
+                    `;
+                    <small class="text-success">
+                        <i class="bi bi-check-circle"></i> 下载完成
+                    </small>
+                    actionsDiv.innerHTML = `
+                        <button class="btn btn-sm btn-outline-secondary" onclick="deleteModel('${modelName}')">
+                            <i class="bi bi-trash"></i> 删除
+                        </button>
+                        `;
+                } else if (status === 'failed' || status === 'cancelled') {
+                    // Failed or cancelled
+                    badge.className = 'badge bg-danger model-download-badge';
+                    badge.textContent = status === 'failed' ? '下载失败' : '已取消';
+                    progressDiv.classList.remove('d-none');
+                    progressDiv.innerHTML = `
+                        <div class="progress-bar bg-danger" role="progressbar" style="width: 100%"></div>
+                    `;
+                    <small class="text-danger mt-2">
+                        <i class="bi bi-exclamation-circle"></i> ${error || '点击重试':`
+                            <button class="btn btn-sm btn-outline-primary" onclick="startDownload('${modelName}')">
+                                <i class="bi bi-arrow-clockwise"></i> 重试
+                            </button>
+                        </button>
+                    </small>
+                    actionsDiv.innerHTML = `
+                        <button class="btn btn-sm btn-outline-primary download-btn" onclick="startDownload('${modelName}')">
+                            <i class="bi bi-download"></i> 下载
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary download-btn d-none"
+                            onclick="cancelDownload('${modelName}')">
+                            <i class="bi bi-x-circle"></i> 取消
+                        </button>
+                    </small>
+                }
+            }
+        }
+
+        // Start model download
+        function startDownload(modelName) {
+            fetch(`/api/models/${modelName}/download`, {method: 'POST'})
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(`开始下载 ${modelName}...`);
+                    pollDownloadStatus();
+                } else {
+                    showToast(data.error || '下载失败');
+                }
+            });
+        }
+
+        // Cancel download
+        function cancelDownload(modelName) {
+            fetch(`/api/models/${modelName}/cancel`, {method: 'POST'})
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(`已取消下载 ${modelName}`);
+                    pollDownloadStatus();
+                } else {
+                    showToast(data.error || '取消失败');
+                }
+            });
+        }
+
+        // Delete model
+        function deleteModel(modelName) {
+            if (!confirm(`确定要删除模型 ${modelName} 吗？此操作不可撤销。)) {
+                fetch(`/api/models/${modelName}`, {method: 'DELETE'})
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                    showToast(`已删除模型 ${modelName}`);
+                    initModelStatus();
+                } else {
+                    showToast(data.error || '删除失败');
+                }
+            });
+        }
+
+        // Cleanup polling interval
+        function cleanupPolling() {
+            if (downloadPollInterval) {
+                clearInterval(downloadPollInterval);
+                downloadPollInterval = null;
+            }
+        }
+
+        // Initialize on page load
+        initModelStatus();
     </script>
 </body>
 </html>

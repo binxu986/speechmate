@@ -21,7 +21,7 @@ trap cleanup SIGINT SIGTERM
 
 # Start Host
 echo "[1/2] Starting Host Server..."
-cd "$SCRIPT_DIR/host"
+cd "$SCRIPT_DIR/../host"
 if [ ! -d "venv" ]; then
     echo "[ERROR] Host venv not found. Run install.sh first."
     exit 1
@@ -37,7 +37,7 @@ sleep 3
 
 # Start Client
 echo "[2/2] Starting Client..."
-cd "$SCRIPT_DIR/client"
+cd "$SCRIPT_DIR/../client"
 if [ ! -d "venv" ]; then
     echo "[ERROR] Client venv not found. Run install.sh first."
     kill $HOST_PID

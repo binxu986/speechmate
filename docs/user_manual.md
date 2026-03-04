@@ -8,28 +8,29 @@ SpeechMate 是一个语音识别和翻译助手，可以让你通过语音快速
 
 ## 快速开始
 
-### 1. 启动 Host 服务器
+### 1. 启动服务
 
-首先需要在服务器或本地电脑上启动 Host 服务：
-
+**一键启动所有服务**:
 ```bash
-cd speechmate/host
-python start_server.py
+# Windows
+scripts\start_all.bat
+
+# Linux/Mac
+./scripts/start_all.sh
 ```
 
-启动后会显示：
-- API Server URL
-- Admin API Key（用于管理）
-
-### 2. 启动 Client 客户端
-
-双击 `SpeechMate.exe` 或运行：
+**或单独启动**:
 ```bash
-cd speechmate/client
-python app/main.py
+# Windows
+scripts\run_host.bat      # 启动服务器
+scripts\run_client.bat    # 启动客户端
+
+# Linux/Mac
+./scripts/run_host.sh
+./scripts/run_client.sh
 ```
 
-### 3. 配置连接
+### 2. 配置连接
 
 1. 在客户端主界面中输入：
    - **Base URL**: Host 服务器的地址（如 `http://192.168.1.100:8000`）
@@ -37,7 +38,7 @@ python app/main.py
 2. 点击"测试连接"确认连接成功
 3. 点击"保存设置"
 
-### 4. 开始使用
+### 3. 开始使用
 
 - 按住 **Alt** 键开始录音，松开后自动识别并在光标处输入文字
 - 按住 **Shift** 键开始录音，松开后将中文翻译成英文
