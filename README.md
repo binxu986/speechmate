@@ -1,3 +1,4 @@
+Test
 # SpeechMate - 语音识别与翻译助手
 
 SpeechMate 是一个开源的语音识别和翻译助手应用程序，包含服务器端（Host）和客户端（Client）两部分。
